@@ -1,7 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { BookOpen } from "lucide-react";
+import { BookOpen, LogOut, LogIn } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     element?.scrollIntoView({ behavior: "smooth" });
@@ -34,7 +38,17 @@ const Header = () => {
           >
             Contact
           </button>
-          <Button variant="default">Visit Us</Button>
+          {user ? (
+            <Button variant="default" onClick={signOut} className="gap-2">
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </Button>
+          ) : (
+            <Button variant="default" onClick={() => navigate('/auth')} className="gap-2">
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Button>
+          )}
         </nav>
       </div>
     </header>

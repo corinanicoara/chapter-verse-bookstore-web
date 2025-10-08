@@ -1,4 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Heart } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
+import { useState, useEffect } from "react";
 import book1 from "@/assets/book-1.jpg";
 import book2 from "@/assets/book-2.jpg";
 import book3 from "@/assets/book-3.jpg";
@@ -28,6 +35,84 @@ const books = [
 ];
 
 const FeaturedBooks = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [savedBooks, setSavedBooks] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      loadSavedBooks();
+    }
+  }, [user]);
+
+  const loadSavedBooks = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('saved_books')
+      .select('book_id')
+      .eq('user_id', user.id);
+
+    if (!error && data) {
+      setSavedBooks(data.map(item => item.book_id));
+    }
+  };
+
+  const handleSaveBook = async (bookId: number) => {
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please sign in to save books',
+        variant: 'destructive',
+      });
+      navigate('/auth');
+      return;
+    }
+
+    const isSaved = savedBooks.includes(bookId);
+
+    if (isSaved) {
+      const { error } = await supabase
+        .from('saved_books')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('book_id', bookId);
+
+      if (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to remove book',
+          variant: 'destructive',
+        });
+      } else {
+        setSavedBooks(savedBooks.filter(id => id !== bookId));
+        toast({
+          title: 'Removed',
+          description: 'Book removed from your saved list',
+        });
+      }
+    } else {
+      const { error } = await supabase
+        .from('saved_books')
+        .insert({ user_id: user.id, book_id: bookId });
+
+      if (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to save book',
+          variant: 'destructive',
+        });
+      } else {
+        setSavedBooks([...savedBooks, bookId]);
+        toast({
+          title: 'Saved!',
+          description: 'Book added to your saved list',
+        });
+      }
+    }
+  };
+
   return (
     <section id="featured" className="py-20 bg-secondary/30">
       <div className="container mx-auto px-4">
@@ -59,9 +144,17 @@ const FeaturedBooks = () => {
                   {book.title}
                 </h3>
                 <p className="text-accent font-medium mb-3">{book.author}</p>
-                <p className="text-muted-foreground leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed mb-4">
                   {book.description}
                 </p>
+                <Button 
+                  variant={savedBooks.includes(book.id) ? "default" : "outline"}
+                  className="w-full gap-2"
+                  onClick={() => handleSaveBook(book.id)}
+                >
+                  <Heart className={`h-4 w-4 ${savedBooks.includes(book.id) ? 'fill-current' : ''}`} />
+                  {savedBooks.includes(book.id) ? 'Saved' : 'Save Book'}
+                </Button>
               </CardContent>
             </Card>
           ))}
