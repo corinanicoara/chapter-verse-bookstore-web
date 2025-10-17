@@ -146,7 +146,6 @@ const FeaturedBooks = () => {
           ))}
         </div>
       </div>
-      <PreOrderForm />
     </section>
   );
 };
