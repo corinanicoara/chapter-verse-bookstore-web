@@ -66,10 +66,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const resetPassword = async (email: string) => {
     const redirectUrl = `https://chapter-verse-bookstore-web.lovable.app/reset-password`;
+    
+    console.log('🔐 Password reset requested for:', email);
+    console.log('🔗 Redirect URL being sent:', redirectUrl);
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
     });
+    
+    if (error) {
+      console.error('❌ Password reset error:', error);
+    } else {
+      console.log('✅ Password reset email sent successfully');
+    }
+    
     return { error };
   };
 
