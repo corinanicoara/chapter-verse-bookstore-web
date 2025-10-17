@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    const redirectUrl = `https://chapter-verse-bookstore-web.lovable.app/auth`;
+    const redirectUrl = `${window.location.origin}/auth`;
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetPassword = async (email: string) => {
-    const redirectUrl = `https://chapter-verse-bookstore-web.lovable.app/reset-password`;
+    const redirectUrl = `${window.location.origin}/reset-password`;
     
     console.log('🔐 Password reset requested for:', email);
     console.log('🔗 Redirect URL being sent:', redirectUrl);
