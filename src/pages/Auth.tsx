@@ -11,25 +11,56 @@ import { BookOpen, ArrowLeft } from 'lucide-react';
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, resetPassword, user } = useAuth();
+  const { signIn, signUp, resetPassword, updatePassword, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
+    // Check if this is a password reset link
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    
+    if (type === 'recovery') {
+      setIsResettingPassword(true);
+      setIsLogin(false);
+      setIsForgotPassword(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user && !isResettingPassword) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isResettingPassword]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      if (isForgotPassword) {
+      if (isResettingPassword) {
+        const { error } = await updatePassword(newPassword);
+        if (error) {
+          toast({
+            title: 'Error',
+            description: error.message,
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Success',
+            description: 'Password updated successfully!',
+          });
+          setIsResettingPassword(false);
+          setIsLogin(true);
+          navigate('/');
+        }
+      } else if (isForgotPassword) {
         const { error } = await resetPassword(email);
         if (error) {
           toast({
@@ -97,7 +128,9 @@ const Auth = () => {
           </div>
           <CardTitle className="text-3xl">Chapter & Verse</CardTitle>
           <CardDescription>
-            {isForgotPassword 
+            {isResettingPassword
+              ? 'Enter your new password'
+              : isForgotPassword 
               ? 'Enter your email to reset your password' 
               : isLogin 
               ? 'Welcome back! Sign in to your account' 
@@ -106,34 +139,53 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            {!isForgotPassword && (
+            {isResettingPassword ? (
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="newPassword">New Password</Label>
                 <Input
-                  id="password"
+                  id="newPassword"
                   type="password"
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
                   required
                   minLength={6}
                 />
               </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                {!isForgotPassword && (
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                )}
+              </>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading 
                 ? 'Please wait...' 
+                : isResettingPassword
+                ? 'Update Password'
                 : isForgotPassword 
                 ? 'Send Reset Link' 
                 : isLogin 
@@ -141,31 +193,33 @@ const Auth = () => {
                 : 'Sign Up'}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm space-y-2">
-            {!isForgotPassword && (
+          {!isResettingPassword && (
+            <div className="mt-4 text-center text-sm space-y-2">
+              {!isForgotPassword && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsLogin(!isLogin)}
+                    className="text-primary hover:underline"
+                  >
+                    {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+                  </button>
+                </div>
+              )}
               <div>
                 <button
                   type="button"
-                  onClick={() => setIsLogin(!isLogin)}
-                  className="text-primary hover:underline"
+                  onClick={() => {
+                    setIsForgotPassword(!isForgotPassword);
+                    setPassword('');
+                  }}
+                  className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+                  {isForgotPassword ? 'Back to sign in' : 'Forgot password?'}
                 </button>
               </div>
-            )}
-            <div>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsForgotPassword(!isForgotPassword);
-                  setPassword('');
-                }}
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                {isForgotPassword ? 'Back to sign in' : 'Forgot password?'}
-              </button>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
       </div>
