@@ -70,8 +70,9 @@ const Auth = () => {
         } else {
           toast({
             title: 'Success',
-            description: 'Account created! Please check your email to confirm.',
+            description: 'Account created successfully! You can now sign in.',
           });
+          setIsLogin(true);
         }
       }
     } finally {
