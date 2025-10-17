@@ -38,6 +38,14 @@ const Header = () => {
           >
             Contact
           </button>
+          {user && (
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="text-foreground hover:text-primary transition-colors"
+            >
+              Dashboard
+            </button>
+          )}
           {user ? (
             <Button variant="default" onClick={signOut} className="gap-2">
               <LogOut className="h-4 w-4" />
