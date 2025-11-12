@@ -5,10 +5,12 @@ import About from "@/components/About";
 import PreOrderForm from "@/components/PreOrderForm";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import { BrandProvider } from "@/contexts/BrandContext";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <BrandProvider>
+      <div className="min-h-screen">
       <Header />
       <main>
         <Hero />
@@ -28,7 +30,8 @@ const Index = () => {
         <Contact />
       </main>
       <Footer />
-    </div>
+      </div>
+    </BrandProvider>
   );
 };
 

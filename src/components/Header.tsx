@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
-import { BookOpen, LogOut, LogIn } from "lucide-react";
+import { BookOpen, LogOut, LogIn, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { useBrand } from "@/contexts/BrandContext";
 
 const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { brandName, toggleBrand, brand } = useBrand();
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     element?.scrollIntoView({ behavior: "smooth" });
@@ -14,9 +16,20 @@ const Header = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold text-primary">Chapter & Verse</h1>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold text-primary">{brandName}</h1>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={toggleBrand}
+            className="gap-2 text-muted-foreground hover:text-primary"
+          >
+            <Sparkles className="h-4 w-4" />
+            {brand === 'poetic' ? 'Modern' : 'Poetic'}
+          </Button>
         </div>
         
         <nav className="hidden md:flex items-center gap-6">

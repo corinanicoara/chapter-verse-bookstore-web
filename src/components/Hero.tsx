@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/bookstore-hero.jpg";
+import { useBrand } from "@/contexts/BrandContext";
 
 const Hero = () => {
+  const { brandTagline } = useBrand();
+  
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     element?.scrollIntoView({ behavior: "smooth" });
@@ -18,9 +21,7 @@ const Hero = () => {
       
       <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
         <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in">
-          Discover Your Next
-          <br />
-          Great Read
+          {brandTagline}
         </h1>
         <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto font-light animate-fade-in" style={{ animationDelay: '0.2s' }}>
           Independent bookstore serving our community with carefully curated selections
