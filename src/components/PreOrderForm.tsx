@@ -9,6 +9,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
+import { useBrand } from '@/contexts/BrandContext';
+import { trackEvent } from '@/lib/analytics';
 
 const formSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
@@ -21,6 +23,7 @@ type FormData = z.infer<typeof formSchema>;
 const PreOrderForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { brand } = useBrand();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -44,6 +47,13 @@ const PreOrderForm = () => {
         }]);
 
       if (error) throw error;
+
+      // Track successful pre-order
+      await trackEvent({
+        eventType: 'pre_order_submission',
+        brandVariant: brand,
+        metadata: { book_title: data.book_title }
+      });
 
       toast({
         title: 'Pre-order Confirmed!',

@@ -1,13 +1,30 @@
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/bookstore-hero.jpg";
 import { useBrand } from "@/contexts/BrandContext";
+import { trackEvent } from "@/lib/analytics";
 
 const Hero = () => {
-  const { brandTagline } = useBrand();
+  const { brandTagline, brand } = useBrand();
   
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     element?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleShopClick = () => {
+    trackEvent({ 
+      eventType: 'hero_shop_click', 
+      brandVariant: brand 
+    });
+    scrollToSection("featured");
+  };
+
+  const handleVisitClick = () => {
+    trackEvent({ 
+      eventType: 'hero_visit_click', 
+      brandVariant: brand 
+    });
+    scrollToSection("contact");
   };
 
   return (
@@ -32,7 +49,7 @@ const Hero = () => {
             size="lg"
             variant="secondary"
             className="text-lg px-8"
-            onClick={() => scrollToSection("featured")}
+            onClick={handleShopClick}
           >
             Shop Now
           </Button>
@@ -40,7 +57,7 @@ const Hero = () => {
             size="lg"
             variant="outline"
             className="text-lg px-8 bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10"
-            onClick={() => scrollToSection("contact")}
+            onClick={handleVisitClick}
           >
             Visit Us
           </Button>
