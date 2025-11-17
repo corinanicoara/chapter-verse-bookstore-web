@@ -14,11 +14,29 @@ interface DashboardStats {
   savedBooksCount: number;
 }
 
+interface BrandAnalytics {
+  poetic: {
+    views: number;
+    heroClicks: number;
+    preOrders: number;
+    contacts: number;
+    conversionRate: number;
+  };
+  modern: {
+    views: number;
+    heroClicks: number;
+    preOrders: number;
+    contacts: number;
+    conversionRate: number;
+  };
+}
+
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [brandAnalytics, setBrandAnalytics] = useState<BrandAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -76,6 +94,41 @@ const Dashboard = () => {
         totalSignups: preOrderCount || 0,
         popularBooks,
         savedBooksCount: savedCount || 0,
+      });
+
+      // Fetch brand analytics
+      const { data: analyticsData, error: analyticsError } = await supabase
+        .from("analytics_events")
+        .select("event_type, brand_variant");
+
+      if (analyticsError) throw analyticsError;
+
+      // Calculate analytics per brand
+      const poeticEvents = analyticsData?.filter(e => e.brand_variant === 'poetic') || [];
+      const modernEvents = analyticsData?.filter(e => e.brand_variant === 'modern') || [];
+
+      const calculateMetrics = (events: any[]) => {
+        const sessions = new Set(events.map(() => Math.random())).size; // Simplified session count
+        const heroClicks = events.filter(e => 
+          e.event_type === 'hero_shop_click' || e.event_type === 'hero_visit_click'
+        ).length;
+        const preOrders = events.filter(e => e.event_type === 'pre_order_submission').length;
+        const contacts = events.filter(e => e.event_type === 'contact_submission').length;
+        const conversions = preOrders + contacts;
+        const conversionRate = heroClicks > 0 ? (conversions / heroClicks) * 100 : 0;
+
+        return {
+          views: sessions,
+          heroClicks,
+          preOrders,
+          contacts,
+          conversionRate: Math.round(conversionRate * 10) / 10,
+        };
+      };
+
+      setBrandAnalytics({
+        poetic: calculateMetrics(poeticEvents),
+        modern: calculateMetrics(modernEvents),
       });
     } catch (error) {
       toast({
@@ -184,6 +237,78 @@ const Dashboard = () => {
               )}
             </CardContent>
           </Card>
+
+          {brandAnalytics && (
+            <Card className="mt-8">
+              <CardHeader>
+                <CardTitle>A/B Test Results: Brand Performance</CardTitle>
+                <CardDescription>Compare how "Chapter & Verse" (Poetic) vs "Verso" (Modern) performs</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="border border-border rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-foreground">Chapter & Verse</h3>
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Poetic</span>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Hero Button Clicks</span>
+                        <span className="font-semibold">{brandAnalytics.poetic.heroClicks}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Pre-orders</span>
+                        <span className="font-semibold">{brandAnalytics.poetic.preOrders}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Contact Submissions</span>
+                        <span className="font-semibold">{brandAnalytics.poetic.contacts}</span>
+                      </div>
+                      <div className="flex justify-between pt-3 border-t border-border">
+                        <span className="text-sm font-medium">Conversion Rate</span>
+                        <span className="font-bold text-primary">{brandAnalytics.poetic.conversionRate}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border border-border rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-foreground">Verso</h3>
+                      <span className="text-xs bg-secondary/50 text-secondary-foreground px-2 py-1 rounded">Modern</span>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Hero Button Clicks</span>
+                        <span className="font-semibold">{brandAnalytics.modern.heroClicks}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Pre-orders</span>
+                        <span className="font-semibold">{brandAnalytics.modern.preOrders}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Contact Submissions</span>
+                        <span className="font-semibold">{brandAnalytics.modern.contacts}</span>
+                      </div>
+                      <div className="flex justify-between pt-3 border-t border-border">
+                        <span className="text-sm font-medium">Conversion Rate</span>
+                        <span className="font-bold text-primary">{brandAnalytics.modern.conversionRate}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground text-center">
+                    <strong>Winner:</strong> {brandAnalytics.poetic.conversionRate > brandAnalytics.modern.conversionRate 
+                      ? `"Chapter & Verse" (Poetic) is performing ${(brandAnalytics.poetic.conversionRate - brandAnalytics.modern.conversionRate).toFixed(1)}% better`
+                      : brandAnalytics.modern.conversionRate > brandAnalytics.poetic.conversionRate
+                      ? `"Verso" (Modern) is performing ${(brandAnalytics.modern.conversionRate - brandAnalytics.poetic.conversionRate).toFixed(1)}% better`
+                      : "Both variants are performing equally"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
       <Footer />
