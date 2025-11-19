@@ -62,14 +62,19 @@ const Dashboard = () => {
         .from("pre_orders")
         .select("*", { count: "exact", head: true });
 
-      if (preOrderError) throw preOrderError;
+      if (preOrderError) {
+        console.error("Error fetching pre-orders:", preOrderError);
+        // Don't throw - just use 0 if table doesn't exist yet
+      }
 
       // Get popular books from pre-orders
       const { data: preOrders, error: booksError } = await supabase
         .from("pre_orders")
         .select("book_title");
 
-      if (booksError) throw booksError;
+      if (booksError) {
+        console.error("Error fetching books:", booksError);
+      }
 
       // Count book occurrences
       const bookCounts = preOrders?.reduce((acc: Record<string, number>, order) => {
@@ -88,7 +93,9 @@ const Dashboard = () => {
         .from("saved_books")
         .select("*", { count: "exact", head: true });
 
-      if (savedError) throw savedError;
+      if (savedError) {
+        console.error("Error fetching saved books:", savedError);
+      }
 
       setStats({
         totalSignups: preOrderCount || 0,
@@ -101,7 +108,9 @@ const Dashboard = () => {
         .from("analytics_events")
         .select("event_type, brand_variant");
 
-      if (analyticsError) throw analyticsError;
+      if (analyticsError) {
+        console.error("Error fetching analytics:", analyticsError);
+      }
 
       // Calculate analytics per brand
       const poeticEvents = analyticsData?.filter(e => e.brand_variant === 'poetic') || [];
