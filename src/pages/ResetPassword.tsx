@@ -19,10 +19,18 @@ const ResetPassword = () => {
     // Check if this is a valid password reset link
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get('type');
+    const accessToken = hashParams.get('access_token');
     
-    if (type !== 'recovery') {
-      // Redirect to auth page if not a valid reset link
-      navigate('/auth');
+    // Only redirect if there's definitely no recovery token
+    if (!accessToken && type !== 'recovery') {
+      // Give it a moment for the session to be established
+      const timer = setTimeout(() => {
+        const recheckParams = new URLSearchParams(window.location.hash.substring(1));
+        if (!recheckParams.get('access_token') && recheckParams.get('type') !== 'recovery') {
+          navigate('/auth');
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
     }
   }, [navigate]);
 

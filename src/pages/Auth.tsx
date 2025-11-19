@@ -19,7 +19,11 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
+    // Don't redirect if user is in a password recovery flow
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const isRecovery = hashParams.get('type') === 'recovery';
+    
+    if (user && !isRecovery) {
       navigate('/');
     }
   }, [user, navigate]);
