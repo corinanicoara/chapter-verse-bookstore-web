@@ -63,6 +63,12 @@ const Header = () => {
             About Us
           </button>
           <button
+            onClick={() => navigate('/pricing')}
+            className="text-foreground hover:text-primary transition-colors"
+          >
+            Pricing
+          </button>
+          <button
             onClick={() => scrollToSection("contact")}
             className="text-foreground hover:text-primary transition-colors"
           >
