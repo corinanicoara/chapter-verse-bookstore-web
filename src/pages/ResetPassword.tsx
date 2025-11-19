@@ -33,9 +33,10 @@ const ResetPassword = () => {
       } else {
         toast({
           title: 'Success',
-          description: 'Password updated successfully!',
+          description: 'Password updated successfully! You can now sign in.',
         });
-        navigate('/');
+        // Redirect to auth page so user can sign in with new password
+        navigate('/auth');
       }
     } finally {
       setLoading(false);
