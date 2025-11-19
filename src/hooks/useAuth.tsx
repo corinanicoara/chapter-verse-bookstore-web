@@ -87,6 +87,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { error } = await supabase.auth.updateUser({
       password: newPassword,
     });
+    
+    if (!error) {
+      // Sign out to clear the recovery session
+      await supabase.auth.signOut();
+    }
+    
     return { error };
   };
 
