@@ -9,6 +9,8 @@ const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { brandName } = useBrand();
+  
+  console.log('🎯 Header render - User:', user?.email || 'not logged in');
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     element?.scrollIntoView({ behavior: "smooth" });
