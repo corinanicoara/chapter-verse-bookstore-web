@@ -21,24 +21,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
+    let mounted = true;
+
+    // Set up auth state listener FIRST
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('🔄 Auth state change:', event, 'User:', session?.user?.email || 'null');
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+      
+      if (mounted) {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
     });
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // Check for existing session and validate it
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('❌ Session retrieval error:', error);
+          // Clear any stale session data
+          setSession(null);
+          setUser(null);
+        } else if (session) {
+          console.log('✅ Valid session found:', session.user?.email);
+          setSession(session);
+          setUser(session.user);
+        } else {
+          console.log('ℹ️ No active session');
+          setSession(null);
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('❌ Auth initialization error:', error);
+        setSession(null);
+        setUser(null);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string) => {
@@ -78,13 +111,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     try {
       const { error } = await supabase.auth.signOut();
-      if (error && error.message !== 'Auth session missing!') {
-        console.error('❌ Sign out error:', error);
+      
+      if (error) {
+        // Ignore "Auth session missing" errors as we've already cleared the state
+        if (error.message === 'Auth session missing!') {
+          console.log('ℹ️ Session already cleared');
+        } else {
+          console.error('❌ Sign out error:', error);
+        }
       } else {
         console.log('✅ Signed out successfully');
       }
-    } catch (error) {
-      console.error('❌ Sign out error:', error);
+    } catch (error: any) {
+      // Handle any unexpected errors
+      if (error?.message !== 'Auth session missing!') {
+        console.error('❌ Sign out error:', error);
+      }
+    }
+    
+    // Ensure localStorage is cleared
+    try {
+      localStorage.removeItem('supabase.auth.token');
+    } catch (e) {
+      console.error('❌ LocalStorage clear error:', e);
     }
   };
 
