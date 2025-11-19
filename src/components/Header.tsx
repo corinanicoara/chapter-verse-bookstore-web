@@ -14,8 +14,14 @@ const Header = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+    console.log('🔴 Sign out button clicked');
+    try {
+      await signOut();
+      console.log('✅ Sign out complete, navigating home');
+      navigate('/');
+    } catch (error) {
+      console.error('❌ Sign out error:', error);
+    }
   };
 
   return (
