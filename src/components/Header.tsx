@@ -3,6 +3,7 @@ import { BookOpen, LogOut, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useBrand } from "@/contexts/BrandContext";
+import { toast } from "@/hooks/use-toast";
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -15,12 +16,26 @@ const Header = () => {
 
   const handleSignOut = async () => {
     console.log('🔴 Sign out button clicked');
+    toast({
+      title: "Signing out...",
+      description: "Please wait while we sign you out.",
+    });
+    
     try {
       await signOut();
       console.log('✅ Sign out complete, navigating home');
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
       navigate('/');
     } catch (error) {
       console.error('❌ Sign out error:', error);
+      toast({
+        variant: "destructive",
+        title: "Sign out failed",
+        description: "There was an error signing you out. Please try again.",
+      });
     }
   };
 
