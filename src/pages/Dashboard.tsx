@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/lib/supabase";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookHeart, TrendingUp, Loader2 } from "lucide-react";
+import { Users, BookHeart, TrendingUp, Loader2, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface DashboardStats {
@@ -33,6 +34,7 @@ interface BrandAnalytics {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { isAdmin, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -50,8 +52,21 @@ const Dashboard = () => {
       return;
     }
 
+    // Wait for role check to complete
+    if (roleLoading) return;
+
+    if (!isAdmin) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to view this page",
+        variant: "destructive",
+      });
+      navigate("/");
+      return;
+    }
+
     fetchDashboardData();
-  }, [user, navigate]);
+  }, [user, isAdmin, roleLoading, navigate]);
 
   const fetchDashboardData = async () => {
     try {
@@ -150,10 +165,26 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardHeader className="text-center">
+            <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <CardTitle>Access Denied</CardTitle>
+            <CardDescription>
+              You don't have permission to view this page.
+            </CardDescription>
+          </CardHeader>
+        </Card>
       </div>
     );
   }
